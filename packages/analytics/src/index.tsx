@@ -40,7 +40,7 @@ function getDevice(userAgent: string) {
 export function Analytics({ 
   siteId, 
   apiKey, 
-  endpoint = 'https://one-shot-analytics.vercel.app/api/analytics' 
+  endpoint = typeof window !== 'undefined' ? `${window.location.origin}/api/analytics` : '/api/analytics'
 }: AnalyticsProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return
