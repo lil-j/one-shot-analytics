@@ -22,7 +22,7 @@ export function DashboardNav({ user }: { user: User }) {
           <div className="flex">
             <div className="flex flex-shrink-0 items-center">
               <Link href="/dashboard" className="text-xl font-bold text-indigo-600">
-                Drop Dead Analytics
+                One Shot Analytics
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
