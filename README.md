@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# One Shot Analytics
 
-## Getting Started
+Privacy-first, self-hosted analytics for your Next.js applications. Get powerful insights without compromising your users' data.
 
-First, run the development server:
+## Features
 
+- 🔒 **Privacy-First**: Your data stays on your infrastructure. No third-party tracking or data sharing.
+- ⚡ **Lightning Fast**: Built for speed with real-time analytics and instant insights.
+- 🚀 **Simple Integration**: One line of code to add analytics to any website or app.
+- 🏠 **Self-Hosted**: Deploy on your own infrastructure with complete control.
+
+## Quick Start
+
+1. Install the package:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install @one-shot-analytics/react
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Add to your app:
+```jsx
+import { Analytics } from '@one-shot-analytics/react'
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+export default function App() {
+  return (
+    <>
+      <Analytics siteId="your-site-id" />
+      {/* Your app */}
+    </>
+  )
+}
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Deploy your analytics server:
+```bash
+npx create-one-shot-analytics
+```
 
-## Learn More
+## Features
 
-To learn more about Next.js, take a look at the following resources:
+- Real-time visitor tracking
+- Page view analytics
+- Traffic sources and campaigns
+- Custom event tracking
+- Geographic data
+- Device and browser stats
+- Self-hosted infrastructure
+- Privacy-focused design
+- No cookies required
+- GDPR compliant
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# Install dependencies
+npm install
 
-## Deploy on Vercel
+# Run development server
+npm run dev
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Build for production
+npm run build
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Start production server
+npm start
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT © [One Shot Analytics]

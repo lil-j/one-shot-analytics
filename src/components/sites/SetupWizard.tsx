@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,19 +16,81 @@ export function SetupWizard({ site, initialStep = 1 }: { site: any, initialStep?
   const [success, setSuccess] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [verified, setVerified] = useState(false)
+  const [hasConfiguredSite, setHasConfiguredSite] = useState(false)
+  const [siteData, setSiteData] = useState(site)
   const supabase = createClient()
+
+  useEffect(() => {
+    // Check if user has any configured sites
+    async function checkConfiguredSites() {
+      const { data: sites, error } = await supabase
+        .from('sites')
+        .select('id')
+        .eq('is_configured', true)
+        .limit(1)
+
+      if (!error && sites && sites.length > 0) {
+        setHasConfiguredSite(true)
+        // If this is a new site and user has configured sites, skip to integration step
+        if (!siteData.is_configured) {
+          setStep(2)
+        }
+      }
+    }
+
+    checkConfiguredSites()
+  }, [siteData.is_configured])
+
+  const refreshSiteData = async () => {
+    const { data: updatedSite } = await supabase
+      .from('sites')
+      .select('*')
+      .eq('id', siteData.id)
+      .single()
+
+    if (updatedSite) {
+      setSiteData(updatedSite)
+    }
+  }
 
   const testConnection = async () => {
     setLoading(true)
     setError(null)
     try {
-      // Extract project ref from URL
+      // If user has a configured site, copy its database settings
+      if (hasConfiguredSite) {
+        const { data: configuredSite } = await supabase
+          .from('sites')
+          .select('db_url, db_key')
+          .eq('is_configured', true)
+          .limit(1)
+          .single()
+
+        if (configuredSite) {
+          // Update site with existing database credentials
+          const { error: updateError } = await supabase
+            .from('sites')
+            .update({
+              db_url: configuredSite.db_url,
+              db_key: configuredSite.db_key,
+              is_configured: true,
+            })
+            .eq('id', siteData.id)
+
+          if (updateError) throw updateError
+          await refreshSiteData()
+          setSuccess(true)
+          setStep(2)
+          return
+        }
+      }
+
+      // Otherwise, proceed with new database setup
       const projectRef = projectUrl
         .replace('https://', '')
         .replace('.supabase.co', '')
         .split('/')[0]
 
-      // Create a test client with the provided credentials
       const response = await fetch('/api/test-db-connection', {
         method: 'POST',
         headers: {
@@ -53,10 +115,10 @@ export function SetupWizard({ site, initialStep = 1 }: { site: any, initialStep?
           db_key: serviceKey,
           is_configured: true,
         })
-        .eq('id', site.id)
+        .eq('id', siteData.id)
 
       if (updateError) throw updateError
-
+      await refreshSiteData()
       setSuccess(true)
       setStep(2)
     } catch (err: any) {
@@ -70,12 +132,15 @@ export function SetupWizard({ site, initialStep = 1 }: { site: any, initialStep?
     setVerifying(true)
     setError(null)
     try {
-      if (!site.db_url || !site.db_key) {
+      // Refresh site data before verification
+      await refreshSiteData()
+
+      if (!siteData.db_url || !siteData.db_key) {
         throw new Error('Database configuration is missing. Please complete the setup first.')
       }
 
       // Create client for the site's database
-      const projectRef = site.db_url
+      const projectRef = siteData.db_url
         .replace('https://', '')
         .replace('.supabase.co', '')
         .split('/')[0]
@@ -86,18 +151,14 @@ export function SetupWizard({ site, initialStep = 1 }: { site: any, initialStep?
 
       const siteDb = createAnalyticsClient(
         `https://${projectRef}.supabase.co`,
-        site.db_key
+        siteData.db_key
       )
       
-      // Check for recent events (last hour)
-      const oneHourAgo = new Date()
-      oneHourAgo.setHours(oneHourAgo.getHours() - 1)
-
+      // Just check for any data at all
       const { data: events, error: eventsError } = await siteDb
         .from('analytics_events')
-        .select('*')
-        .eq('site_id', site.id)
-        .gte('created_at', oneHourAgo.toISOString())
+        .select('id')
+        .eq('site_id', siteData.id)
         .limit(1)
 
       if (eventsError) {
@@ -106,7 +167,7 @@ export function SetupWizard({ site, initialStep = 1 }: { site: any, initialStep?
       }
 
       if (!events || events.length === 0) {
-        throw new Error('No analytics events found. Make sure you have integrated the tracking code correctly and visited your website.')
+        throw new Error('No analytics data found yet. Make sure you have added the tracking code to your website and visited it.')
       }
 
       setVerified(true)
@@ -136,8 +197,8 @@ export default function RootLayout({ children }) {
       <body>
         {children}
         <Analytics 
-          siteId="${site.id}"
-          apiKey="${site.api_key}" 
+          siteId="${siteData.id}"
+          apiKey="${siteData.api_key}" 
         />
       </body>
     </html>
@@ -148,7 +209,7 @@ export default function RootLayout({ children }) {
   return (
     <Card className="p-6">
       <div className="space-y-6">
-        {step === 1 && (
+        {step === 1 && !hasConfiguredSite && (
           <>
             <div>
               <h2 className="text-lg font-semibold">Setup Your Analytics Database</h2>
@@ -211,9 +272,28 @@ export default function RootLayout({ children }) {
                 disabled={loading}
                 className="w-full"
               >
-                {loading ? 'Testing connection...' : 'Test Connection'}
+                {loading ? 'Setting up database...' : 'Setup Analytics Database'}
               </Button>
             </div>
+          </>
+        )}
+
+        {step === 1 && hasConfiguredSite && (
+          <>
+            <div>
+              <h2 className="text-lg font-semibold">Configure Analytics</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                We'll use your existing analytics database for this site.
+              </p>
+            </div>
+
+            <Button
+              onClick={testConnection}
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? 'Configuring...' : 'Use Existing Database'}
+            </Button>
           </>
         )}
 
@@ -293,9 +373,9 @@ export default function RootLayout({ children }) {
               <div className="mx-auto w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
                 <Check className="w-6 h-6" />
               </div>
-              <h2 className="text-lg font-semibold">Setup Complete!</h2>
+              <h2 className="text-lg font-semibold">Analytics Verified!</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Your analytics are now being tracked. Visit your dashboard to see the data.
+                We've detected analytics data from your site. You can now view your dashboard.
               </p>
             </div>
 
