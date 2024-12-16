@@ -1,0 +1,52 @@
+{
+  "name": "@one-shot-analytics/react",
+  "version": "0.2.0",
+  "description": "One Shot Analytics - Privacy-focused analytics for Next.js applications",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.tsx --format cjs,esm --dts --target=es2018",
+    "dev": "tsup src/index.tsx --format cjs,esm --dts --watch",
+    "lint": "eslint \"src/**/*.ts*\"",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist/**"
+  ],
+  "keywords": [
+    "analytics",
+    "tracking",
+    "react",
+    "nextjs",
+    "web-analytics",
+    "privacy-focused",
+    "self-hosted",
+    "one-shot"
+  ],
+  "author": "One Shot Analytics",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/one-shot-analytics.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/one-shot-analytics/issues"
+  },
+  "homepage": "https://github.com/yourusername/one-shot-analytics#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.3.100",
+    "@types/react": "^18.2.0",
+    "eslint": "^8.0.0",
+    "react": "^18.2.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+} 
